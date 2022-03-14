@@ -56,13 +56,6 @@ int rowInfo = 170;
 #define WHITE   0xFFFF
 
 void updateScreen(float humidity, float temperature) {
- 
-  if (isnan(humidity) || isnan(temperature)) {       
-    mylcd.Set_Text_colour(RED);
-    mylcd.Set_Text_Size(TEXT_SIZE_WARNING);
-    mylcd.Print_String("*HIBA*", 0, rowInfo);
-    return;
-  }
 
   // print temperature value
   int row0 = 10;
@@ -110,6 +103,13 @@ void loop() {
                                     
   float humidity = dht.readHumidity();
   float temperature = dht.readTemperature();
+ 
+  if (isnan(humidity) || isnan(temperature)) {       
+    mylcd.Set_Text_colour(RED);
+    mylcd.Set_Text_Size(TEXT_SIZE_WARNING);
+    mylcd.Print_String("*HIBA*", 0, rowInfo);
+    return;
+  }
 
   if (abs(humidity - prev_humidity) >= 0.1 ||
       abs(temperature - prev_temperature) >= 0.1
