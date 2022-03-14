@@ -7,8 +7,11 @@
 #include "DHT.h" 
 #include <LCDWIKI_GUI.h> //Core graphics library
 #include <LCDWIKI_KBV.h> //Hardware-specific library
-               
-#define DHTPIN 45   // free PWM port bei Mega2560 with inserted Touchscreen hat
+
+
+#define DHTGND 42
+#define DHTPIN 44   // free PWM port bei Mega2560 with inserted Touchscreen hat
+#define DHTVCC 46
 #define DHTTYPE DHT22    // DHT11 as aternative when that sensor is used instead of DHT22
 
 
@@ -90,6 +93,11 @@ void updateScreen(float humidity, float temperature) {
 }
 
 void setup() {
+  pinMode(DHTGND, OUTPUT);
+  digitalWrite(DHTGND, LOW);
+  pinMode(DHTVCC, OUTPUT);
+  digitalWrite(DHTVCC, HIGH);
+    
   dht.begin();
 
   mylcd.Init_LCD();
