@@ -57,7 +57,6 @@ int rowInfo = 170;
 // variables for SD card log
 boolean cardInit = false;
 char buff[10];
-Sd2Card card;
 long passedSeconds = 0;
   
 /*
@@ -103,6 +102,23 @@ void updateScreen(float humidity, float temperature) {
   mylcd.Draw_Char(190, row1,'%', WHITE, BLACK, TEXT_SIZE, 0); //x,y char, color, backgound, size, mode
 }
 
+void logToCard(float humidity, float temperature) {
+      if (cardInit) {
+        File datafile = SD.open("datalog.txt", FILE_WRITE);
+        if (datafile) {
+          delay(200); // to see the circle!
+          datafile.write(' ');
+          dtostrf(humidity, 5, 2, buff);
+          datafile.write(buff,5);
+          datafile.write(' ');
+          dtostrf(temperature, 5, 2, buff);
+          datafile.write(buff,5);
+          datafile.println();
+          datafile.close();
+        }
+    }
+}
+
 void setup() {
   pinMode(DHTGND, OUTPUT);
   digitalWrite(DHTGND, LOW);
@@ -117,7 +133,7 @@ void setup() {
 
   // SDCard initialisation
   pinMode(CS_PIN, OUTPUT);
-  cardInit = card.init(SPI_HALF_SPEED, CS_PIN);
+  cardInit = SD.begin(CS_PIN);
   if (cardInit) {
     // show icon for card
     mylcd.Set_Draw_color(0,0,255);
@@ -140,21 +156,16 @@ void loop() {
     return;
   }
 
-  if ( (passedSeconds >= 60) && cardInit) {
+  mylcd.Set_Draw_color(0,255,0);
+  mylcd.Fill_Circle(20,290,(int)passedSeconds/10);
+    
+  if (passedSeconds >= 60) {
     passedSeconds = 0;
     mylcd.Set_Draw_color(255,0,0);
-    mylcd.Fill_Circle(20,290,5);
-    File datafile = SD.open("datalog.txt", FILE_WRITE);
-    delay(200); // to see the circle!
-    dtostrf(humidity, 5, 2, buff);
-    datafile.write(buff,5);
-    datafile.write(' ');
-    dtostrf(temperature, 5, 2, buff);
-    datafile.write(buff,5);
-    datafile.println();
-    datafile.close();
+    mylcd.Fill_Circle(20,290,6);
+    logToCard(humidity, temperature);
     mylcd.Set_Draw_color(0,255,0);
-    mylcd.Fill_Circle(20,290,5);
+    mylcd.Fill_Circle(20,290,6);
   }
 
   if (abs(humidity - prev_humidity) >= 0.1 ||
