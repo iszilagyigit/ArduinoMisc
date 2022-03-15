@@ -7,6 +7,10 @@
 #include "DHT.h" 
 #include <LCDWIKI_GUI.h> //Core graphics library
 #include <LCDWIKI_KBV.h> //Hardware-specific library
+ // include the SD library:
+#include <SPI.h>
+#include <SD.h>
+#include <stdlib.h>
 
 
 #define DHTGND 42
@@ -14,6 +18,7 @@
 #define DHTVCC 46
 #define DHTTYPE DHT22    // DHT11 as aternative when that sensor is used instead of DHT22
 
+#define CS_PIN 53 // CS PIN FOR SPI
 
 /* 
  *  Pianos work best and sound best when the temperature and humidity are right. 
@@ -48,6 +53,12 @@ float prev_temperature = 0.0;
 
 // coordinate for info/warning text line.
 int rowInfo = 170; 
+
+// variables for SD card log
+boolean cardInit = false;
+char buff[10];
+Sd2Card card;
+long passedSeconds = 0;
   
 /*
  * Colors for Display 
@@ -103,11 +114,21 @@ void setup() {
   mylcd.Init_LCD();
   mylcd.Fill_Screen(BLACK);
   mylcd.Set_Text_Mode(0); // 0 - no overlap, 1 - overlap
+
+  // SDCard initialisation
+  pinMode(CS_PIN, OUTPUT);
+  cardInit = card.init(SPI_HALF_SPEED, CS_PIN);
+  if (cardInit) {
+    // show icon for card
+    mylcd.Set_Draw_color(0,0,255);
+    mylcd.Fill_Round_Rectangle(10,280,30,300,5);
+  }
 }
 
 void loop() {
   // Wait a 5 seconds between measurements.
   delay(5000);                     // DHT22 needs minimum 2 seconds for measurements.
+  passedSeconds = passedSeconds + 5;
                                     
   float humidity = dht.readHumidity();
   float temperature = dht.readTemperature();
@@ -117,6 +138,23 @@ void loop() {
     mylcd.Set_Text_Size(TEXT_SIZE_WARNING);
     mylcd.Print_String("*HIBA*", 0, rowInfo);
     return;
+  }
+
+  if ( (passedSeconds >= 60) && cardInit) {
+    passedSeconds = 0;
+    mylcd.Set_Draw_color(255,0,0);
+    mylcd.Fill_Circle(20,290,5);
+    File datafile = SD.open("datalog.txt", FILE_WRITE);
+    delay(200); // to see the circle!
+    dtostrf(humidity, 5, 2, buff);
+    datafile.write(buff,5);
+    datafile.write(' ');
+    dtostrf(temperature, 5, 2, buff);
+    datafile.write(buff,5);
+    datafile.println();
+    datafile.close();
+    mylcd.Set_Draw_color(0,255,0);
+    mylcd.Fill_Circle(20,290,5);
   }
 
   if (abs(humidity - prev_humidity) >= 0.1 ||
