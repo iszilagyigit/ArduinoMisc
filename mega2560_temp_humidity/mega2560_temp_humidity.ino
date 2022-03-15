@@ -164,7 +164,7 @@ void loop() {
     mylcd.Set_Draw_color(255,0,0);
     mylcd.Fill_Circle(20,290,6);
     logToCard(humidity, temperature);
-    mylcd.Set_Draw_color(0,255,0);
+    mylcd.Set_Draw_color(0,0,255);
     mylcd.Fill_Circle(20,290,6);
   }
 
